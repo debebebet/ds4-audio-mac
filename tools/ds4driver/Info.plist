@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>AudioServerPlugIn_MachServices</key>
+    <array/>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>ru</string>
+    <key>CFBundleExecutable</key>
+    <string>DS4AudioDriver</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.ds4audio.driver</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>DualShock 4</string>
+    <key>CFBundlePackageType</key>
+    <string>BNDL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.1.0</string>
+    <key>DS4HideSupportVersion</key>
+    <integer>1</integer>
+    <key>DS4HeartbeatPath</key>
+    <string>/var/tmp/com.ds4audio.gui.heartbeat</string>
+    <key>CFBundleSignature</key>
+    <string>????</string>
+    <key>CFBundleSupportedPlatforms</key>
+    <array>
+        <string>MacOSX</string>
+    </array>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>CFPlugInFactories</key>
+    <dict>
+        <key>6F2A9C1E-7B3D-4A52-9E8C-1D4F6B8A0C21</key>
+        <string>DS4AudioDriverEntryPoint</string>
+    </dict>
+    <key>CFPlugInTypes</key>
+    <dict>
+        <key>443ABAB8-E7B3-491A-B985-BEB9187030DB</key>
+        <array>
+            <string>6F2A9C1E-7B3D-4A52-9E8C-1D4F6B8A0C21</string>
+        </array>
+    </dict>
+    <key>NSHumanReadableCopyright</key>
+    <string>DS4Audio. Драйвер на основе libASPL (MIT).</string>
+    <key>NSPrincipalClass</key>
+    <string></string>
+    <key>sandboxSafe</key>
+    <true/>
+</dict>
+</plist>

@@ -1,0 +1,4 @@
+module CSBC {
+    header "sbc.h"
+    export *
+}

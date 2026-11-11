@@ -1,0 +1,47 @@
+# Project-specific exclusions
+/tools/ds4gui/
+/PLAN.md
+/HANDOVER.md
+/backups/
+/artifacts/
+/notes/
+/refs/
+
+# macOS and build output
+*.xcodeproj/xcuserdata/
+.DS_Store
+.build*/
+build/
+.swiftpm/
+
+# Local dependency/cache output
+tools/rea/node_modules/
+tools/rea/.npm-cache/
+
+# Locally compiled diagnostic executables
+/ps3-boot.mp3
+/tools/acl-dh5/exit-sniff
+/tools/bwbench/bidir
+/tools/bwbench/boundary
+/tools/bwbench/bwbench
+/tools/bwbench/bwbench2
+/tools/bwbench/bwbench3
+/tools/bwbench/bwproc
+/tools/bwbench/combo
+/tools/bwbench/dualdev
+/tools/bwbench/edge
+/tools/bwbench/fill
+/tools/bwbench/inrate
+/tools/bwbench/linktest
+/tools/bwbench/longrun
+/tools/bwbench/pkttype
+/tools/bwbench/small
+/tools/bwbench/sweep
+/tools/hidprobe/hidprobe
+/tools/l2cap-hijack/hijack
+/tools/l2cap-hijack/ownchannel
+/tools/reconnect/ds4-reconnect
+/tools/reconnect/monitor
+/tools/reconnect/probe
+/tools/sbcq/sbcq
+/tools/sbcq/sbcstream
