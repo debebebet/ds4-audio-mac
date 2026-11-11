@@ -1,18 +1,21 @@
 # DualShock 4 Audio — GUI
 
+[English](#english) | [Русский](#русский)
+
 ## Important: first launch on macOS
 
 The distributed application is not signed with an Apple Developer certificate
-or notarized. macOS may therefore quarantine it after download. Clear the
-quarantine attribute before opening the app:
+or notarized. Before opening a downloaded copy, remove macOS quarantine
+metadata:
 
 ```bash
 xattr -cr "/path/to/DualShock 4 Audio.app"
 open "/path/to/DualShock 4 Audio.app"
 ```
 
-`xattr -cr` removes the quarantine metadata attached by macOS to downloaded
-files; it does not install anything or bypass the app's own permissions.
+This removes the quarantine attribute only; it does not install the app or
+change its permissions. A ready universal build is published on the [GitHub
+Releases page](https://github.com/debebebet/ds4-audio-mac/releases/latest).
 
 ## English
 
@@ -23,25 +26,24 @@ vendor-specific Bluetooth HID audio path.
 
 ### Features
 
-- Automatically discovers Bluetooth DualShock 4 controllers.
-- Streams all system audio through the virtual CoreAudio device named
-  **DualShock 4**.
-- Controls the controller speaker volume while streaming.
-- Installs and updates the required HAL driver through a first-run setup wizard.
+- Discovers Bluetooth DualShock 4 controllers automatically.
+- Routes system audio through the virtual CoreAudio device **DualShock 4**.
+- Changes controller speaker volume while streaming.
+- Provides a first-run setup wizard and status/log messages.
 - Restores the previous system output when streaming stops or the app exits.
-- Keeps the temporary CoreAudio device visible only while the app is running.
-- Shows the `ds4probe` log and recovers from a dead audio-capture tap.
+- Removes the temporary CoreAudio device after the app stops.
 
-### Requirements
+### Requirements and warnings
 
 - macOS 13 or newer.
 - A DualShock 4 paired over Bluetooth; USB does not stream to the built-in
   speaker.
-- Administrator approval for the one-time HAL driver installation.
-- Microphone permission may be requested because the virtual device is exposed
-  to macOS as an audio input for loopback capture.
+- The HAL driver is installed into the system CoreAudio directory and requires
+  administrator authentication. Review the source before approving it.
+- Microphone permission may be requested because the virtual loopback device is
+  exposed to macOS as an audio input.
 
-### Build
+### Build and run
 
 From the repository root:
 
@@ -50,7 +52,7 @@ cd tools/ds4gui
 ./build-app.sh
 ```
 
-This builds universal arm64/x86_64 binaries and creates:
+This creates a universal app:
 
 ```text
 tools/ds4gui/build/DualShock 4 Audio.app
@@ -63,8 +65,18 @@ cd tools/ds4gui
 swift run DS4Audio
 ```
 
-The app searches for `ds4probe` in `DS4PROBE_BIN`, the app's Resources,
-the repository tree, and the current directory, in that order.
+### Install and remove the driver
+
+The GUI can install or update the driver from the setup wizard and will ask for
+an administrator password. To remove it manually:
+
+```bash
+cd tools/ds4driver
+sudo ./uninstall-driver.sh
+```
+
+Removing the driver disables the virtual **DualShock 4** CoreAudio device; it
+does not unpair the controller.
 
 ### Runtime model
 
@@ -78,190 +90,121 @@ GUI → ds4probe: capture → resample → SBC → HID reports
 DualShock 4 speaker or headphone output
 ```
 
-The HAL driver publishes the CoreAudio device while the GUI refreshes
+The driver publishes the device while the GUI refreshes
 `/var/tmp/com.ds4audio.gui.heartbeat`. If the app exits or crashes, the
 heartbeat is removed or expires and the device disappears automatically.
 
-### Limitations
+### Troubleshooting
 
-The Bluetooth HID path is not A2DP/HFP and is constrained by macOS link
-scheduling and DualShock 4 firmware. The default profile is 16 kHz SBC,
-joint stereo, bitpool 12, report `0x16`; quality and throughput are therefore
-lower than ordinary Bluetooth audio.
+- **Controller not found:** disconnect USB, wake the controller with PS, verify
+  Bluetooth pairing, and stop other HID test tools.
+- **No sound:** confirm the driver is installed, run `ds4probe --list-audio`,
+  select **DualShock 4** as the system output, and check the GUI log.
+- **No CoreAudio device:** restart the GUI; after a macOS update, reinstall
+  the driver from the setup wizard.
+- **Intermittent sound:** use the default 16 kHz/bitpool 12 profile; the
+  macOS Bluetooth HID link has less bandwidth than A2DP.
+
+### Limitations and disclaimer
+
+The Bluetooth HID path is not A2DP/HFP and depends on macOS link scheduling and
+DualShock 4 firmware. This is an independent experimental project, not
+affiliated with, endorsed by, sponsored by, or approved by Sony Interactive
+Entertainment, Sony Corporation, or PlayStation. “DualShock 4” and PlayStation
+marks belong to their respective owners. Use the software at your own risk.
 
 ## Русский
-SwiftUI-обвязка над проверенным стримером `tools/ds4probe`.
 
-Что умеет:
+DualShock 4 Audio — приложение SwiftUI для macOS, использующее Bluetooth-
+стример `tools/ds4probe` и виртуальное CoreAudio-устройство из
+`tools/ds4driver`. Оно передаёт системный звук на сопряжённый Sony DualShock 4
+через вендорный Bluetooth HID-аудиоканал контроллера.
 
-- **Автоподхват контроллера** — скан HID-устройств раз в 5 секунд. Если DS4
-  подключился по Bluetooth, приложение автоматически его находит; при
-  включённом системном режиме сразу запускает поток, при отключении —
-  останавливает и ждёт следующего подключения.
-- **Громкость динамика DS4** — слайдер и пресеты. Во время стрима громкость
-  меняется на лету: GUI пишет значение в файл, `ds4probe` переотправляет
-  control-отчёт `0x11`, не прерывая аудио.
-- **Системный звук** — переключатель, который делает звук всех приложений
-  источником для динамика геймпада. Системное аудиоустройство при этом
-  называется **«DualShock 4»**.
-- **Первоначальная настройка** — при первом запуске открывается мастер:
-  что нужно приложению, установка аудиодрайвера и проверка геймпада. Мастер
-  можно открыть снова кнопкой «Настройка…».
-- **Чистая система** — устройство «DualShock 4» появляется в списке
-  CoreAudio только пока приложение работает, и исчезает после его закрытия.
-- **Журнал** — вывод `ds4probe` и понятные сообщения об ошибках.
+### Возможности
 
-## Как устройство убирается из системы
+- Автоматически находит DualShock 4 по Bluetooth.
+- Передаёт системный звук через виртуальное устройство CoreAudio **DualShock 4**.
+- Позволяет менять громкость динамика контроллера во время стрима.
+- Показывает мастер настройки, состояние и журнал.
+- Возвращает прежний системный вывод после остановки или выхода.
+- Убирает временное CoreAudio-устройство после остановки приложения.
 
-HAL-драйвер остаётся установленным в `/Library/Audio/Plug-Ins/HAL`, но
-устройство **«DualShock 4» видно только при запущенном приложении**.
+### Требования и предупреждения
 
-Приложение обновляет файл-heartbeat `/var/tmp/com.ds4audio.gui.heartbeat`
-раз в секунду. Драйвер следит за файлом: свежий — устройство опубликовано в
-CoreAudio, протухший или удалённый — устройство убрано из списка. При выходе
-приложение сначала возвращает прежний системный вывод, затем удаляет
-heartbeat, и через доли секунды устройство исчезает из «Настроек звука».
+- macOS 13 или новее.
+- DualShock 4, сопряжённый по Bluetooth; по USB встроенный динамик не работает.
+- HAL-драйвер устанавливается в системный каталог CoreAudio и требует
+  подтверждения администратора. Перед подтверждением изучите исходный код.
+- macOS может запросить доступ к микрофону: виртуальный loopback представлен
+  системе как аудиовход.
 
-Никаких запросов пароля при обычном запуске и выходе не нужно — пароль
-спрашивается только при установке драйвера. Если приложение упало,
-heartbeat протухнет сам через 4 секунды, и устройство тоже исчезнет.
+### Сборка и запуск
 
-## Первоначальная настройка
-
-При первом запуске показывается мастер из четырёх шагов:
-
-1. **Добро пожаловать** — что делает приложение и что требуется.
-2. **Аудиодрайвер** — установка или обновление драйвера «DualShock 4»
-   (нужен пароль администратора). Состояние определяется сравнением
-   контрольной суммы установленного бинарника с тем, что лежит внутри
-   приложения, поэтому «устаревшая» версия тоже предлагается к обновлению.
-3. **Контроллер** — проверка, что DualShock 4 виден по Bluetooth.
-4. **Готово** — итог и переход в основное окно.
-
-Мастер можно открыть в любой момент кнопкой «Настройка…» в карточке
-«Системный звук». Отметка о прохождении хранится в ключе
-`ds4.setupCompleted`.
-
-## Требования
-
-- macOS 13+.
-- DualShock 4, подключённый **по Bluetooth** (по USB звук в динамик не идёт).
-- Драйвер «DualShock 4» из `tools/ds4driver` — устанавливается прямо из GUI
-  (кнопка «Установить драйвер…», потребуется пароль администратора).
-  BlackHole больше не нужен.
-
-## Сборка и запуск
+Из корня репозитория:
 
 ```bash
 cd tools/ds4gui
-./run.sh
-```
-
-`run.sh` соберёт драйвер, `ds4probe` и GUI, сложит `.app` в
-`tools/ds4gui/build/DualShock 4 Audio.app` и откроет его.
-
-Можно отдельно:
-
-```bash
 ./build-app.sh
-open "build/DualShock 4 Audio.app"
 ```
 
-`build-app.sh` собирает **universal**-бинарники (arm64 + x86_64) для macOS 13+:
-драйвер — через `clang++ -arch arm64 -arch x86_64`, GUI и `ds4probe` — через два
-кросс-сборочных `swift build --triple`, затем `lipo -create`. Готовый бандл
-подписывается ad-hoc (`codesign --force --deep --sign -`); для распространения
-нужна Developer ID-подпись и нотаризация.
+Будет создано универсальное приложение:
 
-Проверить архитектуры:
-
-```bash
-lipo -info "build/DualShock 4 Audio.app/Contents/MacOS/DS4Audio"
-lipo -info "build/DualShock 4 Audio.app/Contents/Resources/ds4probe"
-lipo -info "build/DualShock 4 Audio.app/Contents/Resources/DS4AudioDriver.driver/Contents/MacOS/DS4AudioDriver"
-codesign --verify --deep --strict "build/DualShock 4 Audio.app"
+```text
+tools/ds4gui/build/DualShock 4 Audio.app
 ```
 
-Для разработки без .app-бандла:
+Для разработки без app-бандла:
 
 ```bash
 cd tools/ds4gui
 swift run DS4Audio
 ```
 
-GUI ищет `ds4probe` в таком порядке: переменная `DS4PROBE_BIN`, Resources
-внутри .app, дерево проекта, текущая папка.
+### Установка и удаление драйвера
 
-## Как устроен системный режим
+GUI устанавливает или обновляет драйвер через мастер первоначальной настройки
+и запрашивает пароль администратора. Удалить драйвер вручную:
 
-DS4 не регистрирует в macOS стандартный аудиопрофиль, поэтому звук идёт через
-собственный виртуальный HAL-драйвер «DualShock 4» (папка `tools/ds4driver`):
-
-```
-любое приложение
-      ↓
-«DualShock 4» (виртуальное устройство CoreAudio)
-      ↓
-loopback-буфер драйвера
-      ↓
-ds4probe: ресемплинг 16 кГц → SBC joint stereo, bitpool 12
-      ↓
-Bluetooth HID (report 0x11 + 0x16)
-      ↓
-динамик DualShock 4
+```bash
+cd tools/ds4driver
+sudo ./uninstall-driver.sh
 ```
 
-Драйвер устанавливается один раз и отображается в «Настройках звука» как
-**DualShock 4**. GUI запоминает прежний вывод системы, переключается на
-«DualShock 4» при включении режима и возвращает прежнее устройство при
-выключении/выходе. BlackHole и агрегатные устройства не используются.
+После удаления виртуальное устройство **DualShock 4** исчезнет из CoreAudio;
+сопряжение контроллера при этом не удаляется.
 
-Громкость по умолчанию — `0x18` (30 % от аппаратного максимума `0x4F`),
-как в рабочем профиле проекта. Профиль потока: 16 кГц, joint stereo,
-bitpool 12, report `0x16`, 10 кадров (105 % реалтайма).
+### Как работает приложение
 
-## Автоподхват
-
-`ControllerScanner` раз в 5 секунд перечисляет HID-устройства и ищет
-`VID 054C`, `PID 05C4/09CC`. Если найден Bluetooth-экземпляр:
-
-- при включённом системном режиме запускается поток;
-- при выключенном — просто показывается статус «подключён».
-
-USB-подключение определяется, но помечается предупреждением: звук в
-встроенный динамик по USB не идёт.
-
-На каждый скан создаётся **свежий** `IOHIDManager`. Постоянный менеджер без
-`IOHIDManagerScheduleWithRunLoop` не получает уведомлений о подключении, и его
-список устройств замораживается в момент открытия — геймпад, включённый уже
-после запуска приложения, тогда не виден никогда. Пересоздание менеджера на
-каждом тике — это то, что делает `ds4probe --list`.
-
-## Смена системного вывода на лету
-
-Если системный вывод переключить с «DualShock 4» на другое устройство и
-обратно, macOS пересоздаёт входной audio unit устройства, и tap захвата при
-этом молча умирает: колбэки перестают приходить, а стример продолжает слать в
-контроллер тишину. Без обработки этого «поток активен», а звука нет.
-
-`ds4probe` следит за живостью tap'а (по времени последнего колбэка) и сам
-пересоздаёт его, когда он умер. В журнале это видно:
-
-```
-[capture] tap перестал приходить (смена вывода?) — пересоздаём…
-[capture] tap пересоздан, захват восстановлен
+```text
+Приложения macOS
+        ↓
+CoreAudio loopback «DualShock 4»
+        ↓
+GUI → ds4probe: захват → ресемплинг → SBC → HID-репорты
+        ↓
+Динамик или выход на наушники DualShock 4
 ```
 
-В строке `[latency]` дополнительно печатается состояние tap'а — `tap жив` или
-`tap МЁРТВ`.
+Драйвер публикует устройство, пока GUI обновляет
+`/var/tmp/com.ds4audio.gui.heartbeat`. При выходе или сбое heartbeat удаляется
+или протухает, и устройство исчезает автоматически.
 
-## Ограничения
+### Решение проблем
 
-- Нужен установленный HAL-драйвер «DualShock 4» — GUI ставит его сам, но
-  требуется пароль администратора. После обновления macOS драйвер может
-  понадобиться переустановить.
-- Качество ограничено профилем: 16 кГц, SBC bitpool 12 (полоса ~8 кГц).
-- Потолок канала macOS ≈ 5 КБ/с; профиль использует ~4.6 КБ/с, поэтому
-  возможны редкие прерывания — это ограничение стека, а не GUI.
-- При первом захвате системного звука macOS может запросить разрешение на
-  использование микрофона (виртуальное устройство выглядит как аудиовход).
+- **Контроллер не найден:** отключите USB, разбудите контроллер кнопкой PS,
+  проверьте сопряжение Bluetooth и остановите другие HID-тесты.
+- **Нет звука:** проверьте установку драйвера, выполните
+  `ds4probe --list-audio`, выберите **DualShock 4** системным выходом и изучите
+  журнал GUI.
+- **Нет CoreAudio-устройства:** перезапустите GUI; после обновления macOS
+  переустановите драйвер через мастер.
+- **Звук прерывается:** используйте профиль 16 кГц/bitpool 12; Bluetooth HID в
+  macOS имеет меньшую пропускную способность, чем A2DP.
+
+### Ограничения и отказ от связи с Sony
+
+Bluetooth HID — не A2DP/HFP; работа зависит от планировщика macOS и прошивки
+DualShock 4. Это независимый экспериментальный проект, **не связанный с Sony
+Interactive Entertainment, Sony Corporation или PlayStation и не одобренный,
+не спонсируемый и не поддерживаемый ими**. “DualShock 4” и знаки PlayStation
+принадлежат их владельцам. Используйте программу на свой риск.
