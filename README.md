@@ -19,6 +19,7 @@ encoded as SBC frames and placed into HID output reports.
   its original LGPL-2.1-or-later notices.
 
 The SwiftUI GUI is maintained separately on the `gui-system-audio` branch.
+This `main` branch contains the shared streamer, driver, and diagnostics.
 
 ### Requirements
 
@@ -49,6 +50,35 @@ The driver exposes a temporary CoreAudio device named **DualShock 4** while
 the streamer is running. It allows system audio to be captured and encoded
 for the controller.
 
+**Warning:** driver installation changes the system CoreAudio HAL directory
+and requires administrator authentication. Install it only if you understand
+the consequences and have reviewed the source. To remove it:
+
+```bash
+cd tools/ds4driver
+sudo ./uninstall-driver.sh
+```
+
+### Pair a controller
+
+1. Disconnect the USB cable.
+2. Hold **Share + PS** until the light bar flashes.
+3. Open macOS **System Settings → Bluetooth** and select **Wireless
+   Controller**.
+4. Keep the controller awake and verify it appears as a Bluetooth HID device.
+
+The built-in speaker path does not work over USB. If several controllers are
+paired, diagnostic tools that need a specific device use `DS4_ADDRESS`:
+
+```bash
+export DS4_ADDRESS='AA:BB:CC:DD:EE:FF'
+./tools/reconnect/monitor 20
+```
+
+Find the address in **System Information → Bluetooth**, or inspect the
+controller's `addressString` with the project's Bluetooth tools. Do not
+publish a real personal Bluetooth address in scripts, logs, or commits.
+
 ### Run a system-audio stream
 
 ```bash
@@ -74,6 +104,28 @@ DualShock 4 Bluetooth speaker or headphone output
 The profile is constrained by the macOS Bluetooth HID link and the controller
 firmware. Quality and throughput are therefore lower than ordinary A2DP audio.
 The project is experimental and requires a real controller for validation.
+
+### Troubleshooting
+
+- **No controller found:** pair it again, disconnect USB, wake it with PS, and
+  check that Bluetooth is enabled. For a targeted diagnostic, set
+  `DS4_ADDRESS` as shown above.
+- **No sound:** install the HAL driver, run `ds4probe --list-audio`, select
+  **DualShock 4** as the system output when using loopback mode, and confirm
+  that the streamer is running. Stop competing Bluetooth/HID test programs.
+- **The driver is installed but no device appears:** restart the streamer;
+  the virtual device is intentionally published only while the driver
+  heartbeat is active. Reinstall after a macOS update if necessary.
+- **Audio is intermittent:** use the default 16 kHz/bitpool 12 profile. The
+  macOS Bluetooth HID link has a substantially lower budget than A2DP.
+
+### Disclaimer
+
+This is an independent, experimental project and is **not affiliated with,
+endorsed by, sponsored by, or approved by Sony Interactive Entertainment,
+Sony Corporation, or PlayStation**. “DualShock 4” and PlayStation marks belong
+to their respective owners. Use the software at your own risk; it may change
+audio routing, install a system driver, or fail after macOS updates.
 
 ### Licensing
 
@@ -130,6 +182,33 @@ sudo ./install-driver.sh
 работает стример. Через него можно захватывать системный звук и кодировать
 его для контроллера.
 
+**Предупреждение:** установка изменяет системный каталог CoreAudio HAL,
+требует подтверждения администратора и выполняется на ваш риск. Удаление:
+
+```bash
+cd tools/ds4driver
+sudo ./uninstall-driver.sh
+```
+
+### Сопряжение контроллера
+
+1. Отключите USB-кабель.
+2. Удерживайте **Share + PS**, пока световая панель не начнёт мигать.
+3. Откройте **Системные настройки → Bluetooth** и выберите **Wireless
+   Controller**.
+4. Убедитесь, что контроллер виден как Bluetooth HID-устройство.
+
+Встроенный динамик по USB не работает. Если сопряжено несколько
+контроллеров, задайте адрес для диагностических инструментов:
+
+```bash
+export DS4_ADDRESS='AA:BB:CC:DD:EE:FF'
+./tools/reconnect/monitor 20
+```
+
+Адрес можно посмотреть в **Отчёте о системе → Bluetooth** или вывести через
+инструменты проекта. Не публикуйте настоящий персональный Bluetooth-адрес.
+
 ### Запуск системного звука
 
 ```bash
@@ -155,6 +234,29 @@ ds4probe: захват → ресемплинг → SBC → HID-репорты
 Профиль ограничен macOS Bluetooth HID-каналом и прошивкой контроллера,
 поэтому качество и пропускная способность ниже обычного A2DP. Проект
 экспериментальный и требует настоящего контроллера для проверки.
+
+### Решение проблем
+
+- **Контроллер не найден:** повторите сопряжение, отключите USB, разбудите
+  контроллер кнопкой PS и проверьте Bluetooth. Для точечной диагностики
+  задайте `DS4_ADDRESS`.
+- **Нет звука:** установите HAL-драйвер, выполните `ds4probe --list-audio`,
+  выберите **DualShock 4** системным выходом в loopback-режиме и убедитесь,
+  что стример запущен. Остановите другие Bluetooth/HID-тесты.
+- **Драйвер установлен, но устройства нет:** перезапустите стример —
+  устройство публикуется только при активном heartbeat. После обновления
+  macOS может потребоваться переустановка.
+- **Звук прерывается:** используйте профиль по умолчанию 16 кГц/bitpool 12;
+  Bluetooth HID в macOS заметно уже A2DP.
+
+### Отказ от связи с Sony
+
+Это независимый экспериментальный проект, **не связанный с Sony Interactive
+Entertainment, Sony Corporation или PlayStation и не одобренный, не
+спонсируемый и не поддерживаемый ими**. “DualShock 4” и знаки PlayStation
+принадлежат их владельцам. Используйте программу на свой риск: она может
+изменить маршрутизацию звука, установить системный драйвер или перестать
+работать после обновления macOS.
 
 ### Лицензия
 
