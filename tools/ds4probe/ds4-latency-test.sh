@@ -11,7 +11,7 @@
 
 cd "$(dirname "$0")"
 BIN=./.build/release/ds4probe
-TONE=/tmp/ds4_latency_tone.wav
+TONE="${DS4_TEST_AUDIO:-/tmp/ds4_latency_tone.wav}"
 
 if [ ! -x "$BIN" ]; then
     echo "Сборка не найдена, собираю…"
