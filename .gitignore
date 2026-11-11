@@ -1,5 +1,4 @@
 # Project-specific exclusions
-/tools/ds4gui/
 /PLAN.md
 /HANDOVER.md
 /backups/
@@ -13,6 +12,7 @@
 .build*/
 build/
 .swiftpm/
+/DualShock-4-Audio-0.1.zip
 
 # Local dependency/cache output
 tools/rea/node_modules/
