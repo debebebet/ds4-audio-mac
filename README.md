@@ -4,7 +4,7 @@
 
 ## English
 
-DS4 Audio is an experimental macOS GPLv3-or-later project for sending audio
+DS4 Audio is an experimental macOS project for sending audio
 to a Sony DualShock 4 through its vendor-specific Bluetooth HID audio path.
 The controller is not exposed as a normal A2DP/HFP audio device: audio is
 encoded as SBC frames and placed into HID output reports.
@@ -135,7 +135,7 @@ copyright and license notices.
 
 ## Русский
 
-DS4 Audio — экспериментальный проект под macOS с лицензией GPLv3-or-later для
+DS4 Audio — экспериментальный проект под macOS с лицензией для
 передачи звука на Sony DualShock 4 через вендорный Bluetooth HID-аудиоканал.
 Контроллер не определяется как обычное A2DP/HFP-аудиоустройство: звук
 кодируется кадрами SBC и помещается в HID output reports.
